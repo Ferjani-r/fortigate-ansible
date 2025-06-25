@@ -1,0 +1,22 @@
+---
+- name: Configure FortiGate Interface
+  hosts: fortigate
+  gather_facts: false
+  connection: httpapi
+  collections:
+    - fortinet.fortios
+
+  tasks:
+    - name: Create or modify interface port2
+      fortinet.fortios.fortios_system_interface:
+        vdom: "root"
+        state: "present"
+        system_interface:
+          name: "port2"
+          ip: "192.168.2.1 255.255.255.0"
+          allowaccess:
+            - ping
+            - https
+            - ssh
+          type: "physical"
+          alias: "WAN link"
