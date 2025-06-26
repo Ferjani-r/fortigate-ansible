@@ -13,7 +13,7 @@
         state: "present"
         system_interface:
           name: "port2"
-          ip: "192.168.2.1 255.255.255.0"
+          ip: "192.168.2.133 255.255.255.0"
           allowaccess:
             - ping
             - https

@@ -1,0 +1,16 @@
+---
+- hosts: fortigate
+  connection: httpapi
+  gather_facts: false    # <<< ADD THIS LINE
+  collections:
+    - fortinet.fortios
+  tasks:
+    - name: Get system status
+      fortinet.fortios.fortios_monitor_fact:
+        selector: system_status
+      register: status
+
+    - name: Show full status
+      debug:
+        var: status
+
