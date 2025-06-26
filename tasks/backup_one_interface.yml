@@ -9,7 +9,11 @@
       Authorization: "Bearer {{ lookup('env','FG_API_TOKEN') }}"
     validate_certs: no
   register: backup_result
-  no_log: true
+  no_log: false   # Temporarily disable to see error details during debugging
+
+- name: Show backup result for debugging
+  debug:
+    var: backup_result
 
 - name: Save interface {{ interface.key }} backup to file
   copy:
