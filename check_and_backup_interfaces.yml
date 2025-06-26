@@ -7,10 +7,8 @@
   tasks:
     - name: Get all interfaces
       uri:
-        url: "https://{{ ansible_host }}/api/v2/cmdb/system/interface"
+        url: "https://{{ ansible_host }}/api/v2/cmdb/system/interface?access_token={{ lookup('env','FG_API_TOKEN') }}"
         method: GET
-        headers:
-          Authorization: "Bearer {{ lookup('env','FG_API_TOKEN') }}"
         validate_certs: no
         return_content: yes
       register: interfaces

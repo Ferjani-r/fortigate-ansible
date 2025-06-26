@@ -3,10 +3,8 @@
   vars:
     backup_file: "backups/{{ interface.key }}_backup.yml"
   uri:
-    url: "https://{{ ansible_host }}/api/v2/cmdb/system/interface/{{ interface.key }}"
+    url: "https://{{ ansible_host }}/api/v2/cmdb/system/interface/{{ interface.key }}?access_token={{ lookup('env','FG_API_TOKEN') }}"
     method: GET
-    headers:
-      Authorization: "Bearer {{ lookup('env','FG_API_TOKEN') }}"
     validate_certs: no
     return_content: yes
   register: interface_backup
