@@ -1,0 +1,44 @@
+---
+- name: Check FortiGate interfaces and back up if down
+  hosts: fortigate
+  gather_facts: false
+  connection: httpapi
+  collections:
+    - fortinet.fortios
+
+  vars:
+    backup_dir: "backups"
+
+  tasks:
+    - name: Get all interfaces
+      fortinet.fortios.fortios_monitor_fact:
+        selector: system_interface
+      register: iface_status
+
+    - name: Find interfaces that are DOWN
+      set_fact:
+        down_ifaces: >-
+          {{ iface_status.meta.results
+             | selectattr('link_status', 'equalto', 'down')
+             | map(attribute='name') | list }}
+
+    - name: Show down interfaces
+      debug:
+        var: down_ifaces
+
+    - name: Backup each down interface config
+      when: down_ifaces | length > 0
+      loop: "{{ down_ifaces }}"
+      loop_control:
+        loop_var: iface
+      block:
+        - name: Get full interface config
+          fortinet.fortios.fortios_configuration_fact:
+            vdom: "root"
+            path: "system interface {{ iface }}"
+          register: cfg
+
+        - name: Save to file
+          copy:
+            content: "{{ cfg.meta.results | to_nice_yaml }}"
+            dest: "{{ backup_dir }}/{{ iface }}_{{ ansible_date_time.iso8601 }}.yml"
