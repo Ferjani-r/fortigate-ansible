@@ -1,5 +1,5 @@
 [fortigate]
-fgvm  ansible_host=192.168.1.45
+fgvm ansible_host=192.168.1.45
 
 [fortigate:vars]
 ansible_connection=httpapi
@@ -7,8 +7,6 @@ ansible_network_os=fortinet.fortios.fortios
 ansible_httpapi_use_ssl=true
 ansible_httpapi_validate_certs=false
 ansible_httpapi_port=443
-# << the new, supported way >>
-ansible_httpapi_session_key={"access_token":"3Nrjnbz1f1QnkNw6mjth14q3x3sdbk"}
+ansible_httpapi_session_key=3Nrjnbz1f1QnkNw6mjth14q3x3sdbk
 
-vdom=root            # convenience default
-
+vdom=root
