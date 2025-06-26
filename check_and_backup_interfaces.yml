@@ -6,32 +6,27 @@
   collections:
     - fortinet.fortios
 
-  vars:
-    backup_dir: "backups"
-
   tasks:
     - name: Get all interfaces
       fortinet.fortios.fortios_monitor_fact:
         selector: system_interface
-      register: iface_status
+        vdom: "root"
+      register: interfaces
 
-    - name: Find interfaces that are DOWN
+    - name: Debug interfaces list
+      debug:
+        var: interfaces.results
+
+    - name: Set list of down interfaces
       set_fact:
-        down_ifaces: >-
-          {{ iface_status.meta.results
-             | selectattr('link_status', 'equalto', 'down')
-             | map(attribute='name') | list }}
+        down_interfaces: "{{ interfaces.results | selectattr('status', 'equalto', 'down') | list }}"
 
     - name: Show down interfaces
       debug:
-        var: down_ifaces
+        var: down_interfaces
 
-    # 🔽 FIXED PART 🔽
     - name: Backup each down interface config
-      when: down_ifaces | length > 0
-      include_tasks:
-        file: tasks/backup_one_interface.yml
-        apply:
-          vars:
-            iface: "{{ item }}"
-      loop: "{{ down_ifaces }}"
+      include_tasks: tasks/backup_one_interface.yml
+      loop: "{{ down_interfaces }}"
+      loop_control:
+        loop_var: interface

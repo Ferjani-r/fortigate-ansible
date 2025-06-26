@@ -1,10 +1,8 @@
-- name: Get full interface config for {{ iface }}
-  fortinet.fortios.fortios_configuration_fact:
-    vdom: "root"
-    path: "system interface {{ iface }}"
-  register: cfg
-
-- name: Save config of {{ iface }}
+- name: Save config of interface {{ interface.name }}
   copy:
-    content: "{{ cfg.meta.results | to_nice_yaml }}"
-    dest: "{{ backup_dir }}/{{ iface }}_{{ ansible_date_time.iso8601 }}.yml"
+    content: |
+      Interface Name: {{ interface.name }}
+      IP: {{ interface.ip }}
+      Status: {{ interface.status }}
+      Type: {{ interface.type }}
+    dest: "backups/{{ inventory_hostname }}_{{ interface.name }}.txt"
