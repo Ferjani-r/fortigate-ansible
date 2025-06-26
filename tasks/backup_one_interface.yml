@@ -1,0 +1,10 @@
+- name: Get full interface config for {{ iface }}
+  fortinet.fortios.fortios_configuration_fact:
+    vdom: "root"
+    path: "system interface {{ iface }}"
+  register: cfg
+
+- name: Save config of {{ iface }}
+  copy:
+    content: "{{ cfg.meta.results | to_nice_yaml }}"
+    dest: "{{ backup_dir }}/{{ iface }}_{{ ansible_date_time.iso8601 }}.yml"
