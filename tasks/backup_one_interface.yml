@@ -1,16 +1,19 @@
 ---
-- name: Backup one interface configuration
+- name: Backup {{ interface.key }}
   vars:
+    token: "{{ lookup('env','FG_API_TOKEN') | trim | urlencode }}"
     backup_file: "backups/{{ interface.key }}_backup.yml"
   uri:
-    url: "https://{{ ansible_host }}/api/v2/cmdb/system/interface/{{ interface.key }}?access_token={{ lookup('env','FG_API_TOKEN') }}"
+    url: >-
+      https://{{ ansible_host }}/api/v2/cmdb/system/interface/{{ interface.key }}
+      ?access_token={{ token }}
     method: GET
     validate_certs: no
     return_content: yes
   register: interface_backup
-  no_log: true
+  no_log: true           # hide raw config in logs when it’s working
 
-- name: Save interface backup to file
+- name: Save backup to file
   copy:
     content: "{{ interface_backup.content | to_nice_yaml }}"
     dest: "{{ backup_file }}"
