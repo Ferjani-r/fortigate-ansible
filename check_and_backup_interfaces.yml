@@ -19,7 +19,13 @@
 
     - name: Set list of down interfaces
       set_fact:
-        down_interfaces: "{{ interfaces.ansible_facts['system_interface'] | selectattr('status', 'equalto', 'down') | list }}"
+        down_interfaces: >-
+          {{
+            interfaces.meta.results
+            | dict2items
+            | selectattr('value.link', 'eq', false)
+            | list
+          }}
 
     - name: Show down interfaces
       debug:

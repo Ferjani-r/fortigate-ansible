@@ -1,8 +1,13 @@
-- name: Save config of interface {{ interface.name }}
+---
+- name: Backup configuration of interface {{ interface.key }}
+  fortinet.fortios.fortios_config:
+    vdom: "root"
+    config: system interface
+    state: present
+    name: "{{ interface.key }}"
+  register: backup_result
+
+- name: Save interface {{ interface.key }} backup to file
   copy:
-    content: |
-      Interface Name: {{ interface.name }}
-      IP: {{ interface.ip }}
-      Status: {{ interface.status }}
-      Type: {{ interface.type }}
-    dest: "backups/{{ inventory_hostname }}_{{ interface.name }}.txt"
+    content: "{{ backup_result }}"
+    dest: "backups/{{ interface.key }}_backup_{{ ansible_date_time.iso8601 }}.txt"
