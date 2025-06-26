@@ -13,13 +13,13 @@
         vdom: "root"
       register: interfaces
 
-    - name: Debug interfaces list
+    - name: Debug interfaces variable
       debug:
-        var: interfaces.results
+        var: interfaces
 
     - name: Set list of down interfaces
       set_fact:
-        down_interfaces: "{{ interfaces.results | selectattr('status', 'equalto', 'down') | list }}"
+        down_interfaces: "{{ interfaces.ansible_facts['system_interface'] | selectattr('status', 'equalto', 'down') | list }}"
 
     - name: Show down interfaces
       debug:
