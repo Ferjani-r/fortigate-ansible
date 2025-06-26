@@ -14,7 +14,7 @@
         validate_certs: no
         return_content: yes
       register: interfaces
-      no_log: true
+      no_log: false
 
     - name: Debug interfaces variable
       debug:
