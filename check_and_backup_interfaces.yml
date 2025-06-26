@@ -26,19 +26,12 @@
       debug:
         var: down_ifaces
 
+    # 🔽 FIXED PART 🔽
     - name: Backup each down interface config
       when: down_ifaces | length > 0
+      include_tasks:
+        file: tasks/backup_one_interface.yml
+        apply:
+          vars:
+            iface: "{{ item }}"
       loop: "{{ down_ifaces }}"
-      loop_control:
-        loop_var: iface
-      block:
-        - name: Get full interface config
-          fortinet.fortios.fortios_configuration_fact:
-            vdom: "root"
-            path: "system interface {{ iface }}"
-          register: cfg
-
-        - name: Save to file
-          copy:
-            content: "{{ cfg.meta.results | to_nice_yaml }}"
-            dest: "{{ backup_dir }}/{{ iface }}_{{ ansible_date_time.iso8601 }}.yml"
