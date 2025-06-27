@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // These will be used by Ansible
         ANSIBLE_HTTPAPI_AUTH_TYPE = 'token'
         ANSIBLE_HTTPAPI_USE_SSL = 'true'
         ANSIBLE_HTTPAPI_VALIDATE_CERTS = 'false'
@@ -21,8 +20,8 @@ pipeline {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
                         mkdir -p backups
-                        export ANSIBLE_HTTPAPI_TOKEN="$FG_API_TOKEN"
-                        ansible-playbook -i hosts check_and_backup_interfaces.yml
+                        ansible-playbook -i hosts check_and_backup_interfaces.yml \
+                          --extra-vars "ansible_httpapi_token=$FG_API_TOKEN"
                     '''
                 }
             }
