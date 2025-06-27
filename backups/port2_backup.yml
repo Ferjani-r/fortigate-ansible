@@ -1,0 +1,15 @@
+alias: (WAN link)
+duplex: 0
+id: port2
+ip: 192.168.2.133
+link: false
+mac: 00:0c:29:61:1a:3e
+mask: 24
+name: port2
+rx_bytes: 0
+rx_errors: 0
+rx_packets: 0
+speed: 0.0
+tx_bytes: 0
+tx_errors: 0
+tx_packets: 0
