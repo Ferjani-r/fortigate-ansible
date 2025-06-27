@@ -20,8 +20,10 @@ pipeline {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
                         mkdir -p backups
+                        echo "Testing token injection: ${FG_API_TOKEN:0:5}*****"  # Optional for debugging
+
                         ansible-playbook -i hosts check_and_backup_interfaces.yml \
-                          --extra-vars "ansible_httpapi_token=$FG_API_TOKEN"
+                          --extra-vars "ansible_httpapi_token=${FG_API_TOKEN}"
                     '''
                 }
             }

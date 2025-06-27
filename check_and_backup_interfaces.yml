@@ -11,14 +11,29 @@
         selector: system_interface
       register: interfaces_response
 
+    - name: Debug interfaces_response for inspection
+      debug:
+        var: interfaces_response
+
     - name: Set list of down interfaces
       set_fact:
         down_interfaces: >
-          {{ interfaces_response.ansible_facts.fortios_system_interface |
-             dict2items | selectattr('value.link', 'equalto', false) | list }}
+          {{
+            interfaces_response.meta.results
+            | dict2items
+            | selectattr('value.link', 'equalto', false)
+            | list
+          }}
 
     - name: Show down interfaces
-      debug: var=down_interfaces
+      debug:
+        var: down_interfaces
+
+    - name: Create backups directory if not exists
+      file:
+        path: backups
+        state: directory
+        mode: '0755'
 
     - name: Backup each down interface config
       copy:

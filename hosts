@@ -8,8 +8,8 @@ ansible_httpapi_use_ssl=true
 ansible_httpapi_validate_certs=false
 ansible_httpapi_port=443
 
-# use token-specific vars instead of session_key
-ansible_httpapi_auth_type=token
-#ansible_httpapi_token=3Nrjnbz1f1QnkNw6mjth14q3x3sdbk
+
+# << the new, supported way >>Add commentMore actions
+ansible_httpapi_session_key={"access_token":"mrd6g6rgyNtjfbd5q97Gs8H9qswt7m"}
 
 vdom=root
