@@ -1,28 +1,37 @@
 pipeline {
     agent any
-    environment {
-        FG_API_TOKEN = credentials('fortigate_api_token')
-    }
 
-    triggers {
-        cron('H/5 * * * *')  // every 5 minutes
+    environment {
+        // These will be used by Ansible
+        ANSIBLE_HTTPAPI_AUTH_TYPE = 'token'
+        ANSIBLE_HTTPAPI_USE_SSL = 'true'
+        ANSIBLE_HTTPAPI_VALIDATE_CERTS = 'false'
+        ANSIBLE_HTTPAPI_PORT = '443'
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/Ferjani-r/fortigate-ansible.git', branch: 'main'
+            }
+        }
+
         stage('Check & Backup DOWN Interfaces') {
             steps {
-                sh '''
-                  mkdir -p backups
-                  export ANSIBLE_HTTPAPI_SESSION_KEY='{"access_token":"$FG_API_TOKEN"}'
-                  ansible-playbook -i hosts check_and_backup_interfaces.yml
-                '''
+                withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
+                    sh '''
+                        mkdir -p backups
+                        export ANSIBLE_HTTPAPI_TOKEN="$FG_API_TOKEN"
+                        ansible-playbook -i hosts check_and_backup_interfaces.yml
+                    '''
+                }
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'backups/*.yml', fingerprint: true
+            archiveArtifacts artifacts: 'backups/*.yml', onlyIfSuccessful: true
         }
     }
 }

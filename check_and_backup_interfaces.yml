@@ -1,4 +1,3 @@
----
 - name: Check FortiGate interfaces and back up if down
   hosts: fortigate
   gather_facts: no
@@ -14,15 +13,12 @@
 
     - name: Set list of down interfaces
       set_fact:
-        down_interfaces: >-
-          {{ interfaces_response.ansible_facts.fortios_system_interface
-             | dict2items
-             | selectattr('value.link', 'equalto', false)
-             | list }}
+        down_interfaces: >
+          {{ interfaces_response.ansible_facts.fortios_system_interface |
+             dict2items | selectattr('value.link', 'equalto', false) | list }}
 
     - name: Show down interfaces
-      debug:
-        var: down_interfaces
+      debug: var=down_interfaces
 
     - name: Backup each down interface config
       copy:
