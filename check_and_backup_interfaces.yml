@@ -3,33 +3,29 @@
   hosts: fortigate
   gather_facts: no
   connection: httpapi
+  collections:
+    - fortinet.fortios
 
   tasks:
     - name: Get all interfaces
-      uri:
-        url: >-
-          https://{{ ansible_host }}/api/v2/cmdb/system/interface
-          ?access_token={{ lookup('env','FG_API_TOKEN') | trim | urlencode }}
-        method: GET
-        validate_certs: no
-        return_content: yes
-      register: interfaces
-      no_log: false            # keep visible until everything works
+      fortinet.fortios.fortios_monitor_fact:
+        selector: system_interface
+      register: interfaces_response
 
-    - name: Build list of DOWN interfaces
+    - name: Set list of down interfaces
       set_fact:
         down_interfaces: >-
-          {{ interfaces.json.results
+          {{ interfaces_response.ansible_facts.fortios_system_interface
              | dict2items
              | selectattr('value.link', 'equalto', false)
              | list }}
 
-    - name: Show DOWN interfaces
+    - name: Show down interfaces
       debug:
         var: down_interfaces
 
-    - name: Backup each DOWN interface config
-      include_tasks: tasks/backup_one_interface.yml
+    - name: Backup each down interface config
+      copy:
+        content: "{{ item.value | to_nice_yaml }}"
+        dest: "backups/{{ item.key }}_backup.yml"
       loop: "{{ down_interfaces }}"
-      loop_control:
-        loop_var: interface

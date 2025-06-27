@@ -7,6 +7,7 @@ ansible_network_os=fortinet.fortios.fortios
 ansible_httpapi_use_ssl=true
 ansible_httpapi_validate_certs=false
 ansible_httpapi_port=443
-ansible_httpapi_session_key=3Nrjnbz1f1QnkNw6mjth14q3x3sdbk
+
+ansible_httpapi_session_key='{"access_token": "3Nrjnbz1f1QnkNw6mjth14q3x3sdbk"}'
 
 vdom=root
