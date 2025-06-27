@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        // Run every 2 minutes
-        cron('H/2 * * * *')
+        cron('H/2 * * * *') // every 2 minutes
     }
 
     environment {
@@ -21,7 +20,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'fortigate_api_token', variable: 'FG_API_TOKEN')]) {
                     sh '''
-                        #!/bin/bash
                         mkdir -p backups
                         echo "Running backup with token: $FG_API_TOKEN"
                         ansible-playbook -i hosts check_and_backup_interfaces.yml
