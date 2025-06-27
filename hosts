@@ -10,6 +10,6 @@ ansible_httpapi_port=443
 
 # use token-specific vars instead of session_key
 ansible_httpapi_auth_type=token
-ansible_httpapi_token=3Nrjnbz1f1QnkNw6mjth14q3x3sdbk
+#ansible_httpapi_token=3Nrjnbz1f1QnkNw6mjth14q3x3sdbk
 
 vdom=root
