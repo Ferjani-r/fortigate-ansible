@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/2 * * * *') // every 2 minutes
+        cron('H/2 * * * *')
     }
 
     environment {
@@ -19,17 +19,16 @@ pipeline {
         stage('Check & back‑up DOWN interfaces') {
             steps {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
-                    sh '''
-                        #!/bin/bash
+                    sh """
                         set -e
                         mkdir -p backups
-                        TOKEN_PREVIEW=$(expr substr "$FG_API_TOKEN" 1 5)
-                        echo "Running backup with token: ${TOKEN_PREVIEW}*****"
+                        TOKEN_PREVIEW=\$(expr substr \$FG_API_TOKEN 1 5)
+                        echo "Running backup with token: \${TOKEN_PREVIEW}*****"
 
-                        ansible-playbook -i hosts \
-                            --extra-vars "ansible_httpapi_session_key=$FG_API_TOKEN" \
-                            check_and_backup_interfaces.yml
-                    '''
+                        ansible-playbook -i hosts \\
+                          --extra-vars 'ansible_httpapi_session_key={"access_token":"\$FG_API_TOKEN"}' \\
+                          check_and_backup_interfaces.yml
+                    """
                 }
             }
         }
