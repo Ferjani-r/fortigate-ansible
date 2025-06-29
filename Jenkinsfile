@@ -26,7 +26,7 @@ pipeline {
                         echo "Running backup with token: \${TOKEN_PREVIEW}*****"
 
                         ansible-playbook -i hosts \\
-                          --extra-vars 'ansible_httpapi_session_key={"access_token":"\$FG_API_TOKEN"}' \\
+                          --extra-vars 'ansible_httpapi_session_key={"access_token":"'"\$FG_API_TOKEN"'"}' \\
                           check_and_backup_interfaces.yml
                     """
                 }
@@ -44,7 +44,7 @@ pipeline {
     }
 
     post {
-        failure  { echo '❌  Build failed' }
-        success  { echo '✅  Build succeeded' }
+        failure { echo '❌  Build failed' }
+        success { echo '✅  Build succeeded' }
     }
 }
