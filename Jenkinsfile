@@ -1,8 +1,12 @@
 pipeline {
-    agent any                                  // gives every stage a workspace
+    agent any
 
-    triggers {                                 // every 2 minutes
-        cron('H/2 * * * *')
+    triggers {
+        cron('H/2 * * * *') // every 2 minutes
+    }
+
+    environment {
+        FG_API_TOKEN = credentials('FG_API_TOKEN')  // updated ID
     }
 
     stages {
@@ -15,11 +19,10 @@ pipeline {
 
         stage('Check & back‑up DOWN interfaces') {
             steps {
-                withCredentials([string(credentialsId: 'fortigate_api_token',
-                                         variable: 'FG_API_TOKEN')]) {
+                withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
                         set -e
-                        mkdir -p backups          # ensure dir exists
+                        mkdir -p backups
                         echo "Running backup with token: ${FG_API_TOKEN:0:5}*****"
 
                         ansible-playbook -i hosts \
