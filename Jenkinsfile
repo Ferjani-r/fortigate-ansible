@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        FG_API_TOKEN = credentials('FG_API_TOKEN')  // updated ID
+        FG_API_TOKEN = credentials('FG_API_TOKEN')  // your Jenkins credential ID
     }
 
     stages {
@@ -21,6 +21,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
+                        #!/bin/bash
                         set -e
                         mkdir -p backups
                         echo "Running backup with token: ${FG_API_TOKEN:0:5}*****"
@@ -44,7 +45,7 @@ pipeline {
     }
 
     post {
-        failure  { echo '❌  Build failed'  }
+        failure  { echo '❌  Build failed' }
         success  { echo '✅  Build succeeded' }
     }
 }
