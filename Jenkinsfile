@@ -6,11 +6,10 @@ pipeline {
     }
 
     environment {
-        FG_API_TOKEN = credentials('FG_API_TOKEN')  // your Jenkins credential ID
+        FG_API_TOKEN = credentials('FG_API_TOKEN')
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -24,11 +23,13 @@ pipeline {
                         #!/bin/bash
                         set -e
                         mkdir -p backups
-                        echo "Running backup with token: ${FG_API_TOKEN:0:5}*****"
+                        # Use 'expr substr' to avoid bash-only substring in some shells
+                        TOKEN_PREVIEW=$(expr substr "$FG_API_TOKEN" 1 5)
+                        echo "Running backup with token: ${TOKEN_PREVIEW}*****"
 
-                        ansible-playbook -i hosts \
-                                         --extra-vars "ansible_httpapi_session_key={\\"access_token\\":\\"$FG_API_TOKEN\\"}" \
-                                         check_and_backup_interfaces.yml
+                        ansible-playbook -i hosts \\
+                            --extra-vars "ansible_httpapi_session_key={\\"access_token\\":\\"$FG_API_TOKEN\\"}" \\
+                            check_and_backup_interfaces.yml
                     '''
                 }
             }
