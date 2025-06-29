@@ -23,12 +23,11 @@ pipeline {
                         #!/bin/bash
                         set -e
                         mkdir -p backups
-                        # Use 'expr substr' to avoid bash-only substring in some shells
                         TOKEN_PREVIEW=$(expr substr "$FG_API_TOKEN" 1 5)
                         echo "Running backup with token: ${TOKEN_PREVIEW}*****"
 
-                        ansible-playbook -i hosts \\
-                            --extra-vars "ansible_httpapi_session_key={\\"access_token\\":\\"$FG_API_TOKEN\\"}" \\
+                        ansible-playbook -i hosts \
+                            --extra-vars "ansible_httpapi_session_key=$FG_API_TOKEN" \
                             check_and_backup_interfaces.yml
                     '''
                 }
