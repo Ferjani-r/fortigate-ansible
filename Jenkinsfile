@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/10 * * * *') // Runs every 10 minutes to reduce API load
+        cron('H/30 * * * *') // Runs every 10 minutes to reduce API load
     }
 
     environment {
