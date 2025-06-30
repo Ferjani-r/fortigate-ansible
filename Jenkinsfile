@@ -22,11 +22,11 @@ pipeline {
                     sh """
                         set -e
                         mkdir -p backups
-                        TOKEN_PREVIEW=\$(expr substr \$FG_API_TOKEN 1 5)
+                        TOKEN_PREVIEW=\$(expr substr "\${FG_API_TOKEN}" 1 5)
                         echo "Running backup with token: \${TOKEN_PREVIEW}*****"
 
                         ansible-playbook -i hosts \\
-                          --extra-vars 'ansible_httpapi_session_key={"access_token":"'"\$FG_API_TOKEN"'"}' \\
+                          -e 'ansible_httpapi_session_key={\"access_token\":\"${FG_API_TOKEN}\"}' \\
                           check_and_backup_interfaces.yml
                     """
                 }
