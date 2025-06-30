@@ -10,6 +10,6 @@ rx_bytes: 0
 rx_errors: 0
 rx_packets: 0
 speed: 0.0
-tx_bytes: 1101869
+tx_bytes: 125958
 tx_errors: 0
-tx_packets: 2688
+tx_packets: 313
