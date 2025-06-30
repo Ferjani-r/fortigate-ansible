@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/2 * * * *') // Runs every 2 minutes
+        cron('H/10 * * * *') // Runs every 5 minutes to reduce API load
     }
 
     environment {
@@ -27,6 +27,9 @@ pipeline {
 
                         ansible-playbook -i hosts \
                           -e '{"ansible_httpapi_session_key": {"access_token": "'${FG_API_TOKEN}'"}}' \
+                          --retry-files-enabled \
+                          --retries 3 \
+                          --delay 10 \
                           check_and_backup_interfaces.yml
                     '''
                 }
