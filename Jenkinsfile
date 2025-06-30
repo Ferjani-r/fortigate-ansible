@@ -21,6 +21,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
                         set -e
+                        rm -f backups/*.yml  # Clean up existing backups
                         mkdir -p backups
                         TOKEN_PREVIEW=$(echo "${FG_API_TOKEN}" | cut -c1-5)
                         echo "Running backup with token: ${TOKEN_PREVIEW}*****"
