@@ -25,8 +25,11 @@ pipeline {
                         TOKEN_PREVIEW=$(echo "${FG_API_TOKEN}" | cut -c1-5)
                         echo "Running backup with token: ${TOKEN_PREVIEW}*****"
 
+                        # Export the token as an environment variable for Ansible
+                        export ANSIBLE_HTTPAPI_SESSION_KEY="{\\"access_token\\": \\"${FG_API_TOKEN}\\"}"
+                        echo "Debug: ANSIBLE_HTTPAPI_SESSION_KEY set to: ${ANSIBLE_HTTPAPI_SESSION_KEY}"
+
                         ansible-playbook -i hosts \
-                          -e '{"ansible_httpapi_session_key": {"access_token": "'${FG_API_TOKEN}'"}}' \
                           check_and_backup_interfaces.yml
                     '''
                 }
