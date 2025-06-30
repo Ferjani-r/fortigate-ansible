@@ -2,21 +2,21 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/2 * * * *')
+        cron('H/2 * * * *') // Runs every 2 minutes
     }
 
     environment {
-        FG_API_TOKEN = credentials('FG_API_TOKEN')
+        FG_API_TOKEN = credentials('FG_API_TOKEN') // Credential ID for FortiGate API token
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout scm // Pulls the latest code from the Git repository
             }
         }
 
-        stage('Check & back‑up DOWN interfaces') {
+        stage('Check & Back-up DOWN Interfaces') {
             steps {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh """
@@ -33,18 +33,18 @@ pipeline {
             }
         }
 
-        stage('Archive backups') {
+        stage('Archive Backups') {
             when {
                 expression { fileExists('backups') && sh(returnStatus: true, script: 'ls -1 backups/*.yml 2>/dev/null') == 0 }
             }
             steps {
-                archiveArtifacts artifacts: 'backups/*.yml', fingerprint: true
+                archiveArtifacts artifacts: 'backups/*.yml', fingerprint: true // Archives backup files
             }
         }
     }
 
     post {
-        failure { echo '❌  Build failed' }
-        success { echo '✅  Build succeeded' }
+        failure { echo '❌ Build failed' }
+        success { echo '✅ Build succeeded' }
     }
 }

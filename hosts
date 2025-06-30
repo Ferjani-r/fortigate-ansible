@@ -1,5 +1,5 @@
 [fortigate]
-fgvm ansible_host=192.168.1.45
+fgvm ansible_host=172.17.120.21
 
 [fortigate:vars]
 ansible_connection=httpapi
