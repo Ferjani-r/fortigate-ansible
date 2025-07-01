@@ -11,6 +11,7 @@ pipeline {
         MYSQL_HOST = 'localhost' // From config.php
         MYSQL_DB   = 'observium' // From config.php
         FORTIGATE_DEVICE_IP = '172.17.120.21'
+        FORTIGATE_CREDENTIALS = credentials('FORTIGATE_CREDENTIALS') // Username:password for FortiGate
     }
 
     stages {
@@ -28,9 +29,16 @@ pipeline {
                         mkdir -p observium_data
                         # Query database for interface statuses with proper escaping
                         mysql -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${DB_PASS}" ${MYSQL_DB} -e "SELECT p.port_id, d.hostname, p.ifName, p.ifDescr, p.ifAdminStatus, p.ifOperStatus FROM ports AS p JOIN devices AS d ON p.device_id = d.device_id WHERE d.hostname = \\"${FORTIGATE_DEVICE_IP}\\";" > observium_discovery.log
-                        # Extract down interfaces
-                        DOWN_FROM_OBSERVIUM=$(grep -i "down" observium_discovery.log | grep -o "ifName.*" | cut -d'|' -f3 | tr -d ' ' || true)
-                        echo "Down interfaces from Observium: $DOWN_FROM_OBSERVIUM"
+                        # Extract down interfaces using tab as delimiter
+                        DOWN_INTERFACES=$(grep -i "down" observium_discovery.log | tail -n +2 | awk '{print $3}' || true)
+                        echo "Down interfaces from Observium: $DOWN_INTERFACES"
+                        # Backup down interfaces
+                        if [ -n "$DOWN_INTERFACES" ]; then
+                            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                            for INTERFACE in $DOWN_INTERFACES; do
+                                ./backup_interface.sh "${FORTIGATE_DEVICE_IP}" "${INTERFACE}" "${FORTIGATE_CREDENTIALS}" "observium_data/backup_${TIMESTAMP}_${INTERFACE}.conf"
+                            done
+                        fi
                     '''
                 }
             }
@@ -57,7 +65,7 @@ pipeline {
                 expression { fileExists('observium_discovery.log') }
             }
             steps {
-                archiveArtifacts artifacts: 'observium_discovery.log', fingerprint: true
+                archiveArtifacts artifacts: 'observium_discovery.log,observium_data/backup_*.conf', fingerprint: true
             }
         }
     }
