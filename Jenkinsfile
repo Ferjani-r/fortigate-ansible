@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         FG_API_TOKEN = credentials('FG_API_TOKEN')
-        OBSERVIUM_CREDENTIALS = credentials('OBSERVIUM_CREDENTIALS')
+        OBSERVIUM_CREDENTIALS = credentials('OBSERVIUM_CREDENTIALS') // Username: observium, Password: admin
         OBSERVIUM_PATH = '/opt/observium'
         FORTIGATE_DEVICE_IP = '172.17.120.21'
     }
@@ -25,8 +25,12 @@ pipeline {
                     sh '''
                         set -e
                         mkdir -p observium_data
-                        # Run discovery with credentials (adjust if sudo or password prompt is needed)
-                        sudo -u observium ${OBSERVIUM_PATH}/observium-wrapper discovery --host ${FORTIGATE_DEVICE_IP} > observium_discovery.log 2>&1
+                        # Run discovery and capture output/stderr, exit on failure
+                        if ! sudo -u observium ${OBSERVIUM_PATH}/observium-wrapper discovery --host ${FORTIGATE_DEVICE_IP} > observium_discovery.log 2>&1; then
+                            cat observium_discovery.log
+                            exit 1
+                        fi
+                        cat observium_discovery.log
                         echo "Observium discovery completed for ${FORTIGATE_DEVICE_IP}"
                     '''
                 }
