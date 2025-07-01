@@ -2,17 +2,34 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/30 * * * *') // Runs every 10 minutes to reduce API load
+        cron('H/10 * * * *') // Runs every 10 minutes
     }
 
     environment {
-        FG_API_TOKEN = credentials('FG_API_TOKEN') // Credential ID for FortiGate API token
+        FG_API_TOKEN = credentials('FG_API_TOKEN')
+        OBSERVIUM_CREDENTIALS = credentials('OBSERVIUM_CREDENTIALS')
+        OBSERVIUM_PATH = '/opt/observium'
+        FORTIGATE_DEVICE_IP = '172.17.120.21'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm // Pulls the latest code from the Git repository
+                checkout scm
+            }
+        }
+
+        stage('Run Observium Discovery') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'OBSERVIUM_CREDENTIALS', usernameVariable: 'OBSERVIUM_USER', passwordVariable: 'OBSERVIUM_PASS')]) {
+                    sh '''
+                        set -e
+                        mkdir -p observium_data
+                        # Run discovery with credentials (adjust if sudo or password prompt is needed)
+                        sudo -u observium ${OBSERVIUM_PATH}/observium-wrapper discovery --host ${FORTIGATE_DEVICE_IP} > observium_discovery.log 2>&1
+                        echo "Observium discovery completed for ${FORTIGATE_DEVICE_IP}"
+                    '''
+                }
             }
         }
 
@@ -21,19 +38,57 @@ pipeline {
                 withCredentials([string(credentialsId: 'FG_API_TOKEN', variable: 'FG_API_TOKEN')]) {
                     sh '''
                         set -e
-                        rm -f backups/*.yml  # Clean up existing backups
                         mkdir -p backups
                         TOKEN_PREVIEW=$(echo "${FG_API_TOKEN}" | cut -c1-5)
                         echo "Running backup with token: ${TOKEN_PREVIEW}*****"
 
-                        # Export the token as an environment variable for Ansible
-                        export ANSIBLE_HTTPAPI_SESSION_KEY="{\\"access_token\\": \\"${FG_API_TOKEN}\\"}"
-                        echo "Debug: ANSIBLE_HTTPAPI_SESSION_KEY set to: ${ANSIBLE_HTTPAPI_SESSION_KEY}"
-
                         ansible-playbook -i hosts \
-                          check_and_backup_interfaces.yml
+                          -e "{'ansible_httpapi_session_key': {'access_token': '${FG_API_TOKEN}'}}" \
+                          check_and_backup_interfaces.yml > ansible_output.log
+
+                        DOWN_INTERFACES=$(grep -A 10 "down_interfaces" ansible_output.log | grep -o '"name": "[^"]*"' | cut -d'"' -f4)
+                        echo "Down interfaces from Ansible: $DOWN_INTERFACES"
                     '''
                 }
+            }
+        }
+
+        stage('Cross-Check with Observium') {
+            steps {
+                sh '''
+                    set -e
+                    # Parse discovery log for down interfaces (adjust based on log format)
+                    DOWN_FROM_OBSERVIUM=$(grep -i "down" observium_discovery.log | grep -o "interface [a-zA-Z0-9-]*" | cut -d" " -f2 || true)
+                    echo "Down interfaces from Observium: $DOWN_FROM_OBSERVIUM"
+
+                    if [ -n "$DOWN_FROM_OBSERVIUM" ]; then
+                        if ! grep -q "$DOWN_FROM_OBSERVIUM" <<< "$DOWN_INTERFACES"; then
+                            echo "Warning: Observium detected down interfaces ($DOWN_FROM_OBSERVIUM) not matched by Ansible ($DOWN_INTERFACES). Triggering additional check."
+                            ansible-playbook -i hosts \
+                              -e "{'ansible_httpapi_session_key': {'access_token': '${FG_API_TOKEN}'}}" \
+                              check_and_backup_interfaces.yml
+                        fi
+                    fi
+                '''
+            }
+        }
+
+        stage('Validate Backups') {
+            when {
+                expression { fileExists('backups') && sh(returnStatus: true, script: 'ls -1 backups/*.yml 2>/dev/null') == 0 }
+            }
+            steps {
+                sh '''
+                    set -e
+                    for file in backups/*.yml; do
+                        checksum=$(sha256sum "$file" | awk '{print $1}')
+                        echo "Checksum for $file: $checksum"
+                        if ! grep -q "interface" "$file"; then
+                            echo "Validation failed: $file is corrupted"
+                            exit 1
+                        fi
+                    done
+                '''
             }
         }
 
@@ -42,13 +97,17 @@ pipeline {
                 expression { fileExists('backups') && sh(returnStatus: true, script: 'ls -1 backups/*.yml 2>/dev/null') == 0 }
             }
             steps {
-                archiveArtifacts artifacts: 'backups/*.yml', fingerprint: true // Archives backup files
+                archiveArtifacts artifacts: 'backups/*.yml,observium_discovery.log,ansible_output.log', fingerprint: true
             }
         }
     }
 
     post {
-        failure { echo '❌ Build failed' }
-        success { echo '✅ Build succeeded' }
+        success {
+            echo '✅ Build succeeded'
+        }
+        failure {
+            echo '❌ Build failed'
+        }
     }
 }
