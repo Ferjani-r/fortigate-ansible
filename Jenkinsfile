@@ -26,8 +26,8 @@ pipeline {
                     sh '''
                         set -e
                         mkdir -p observium_data
-                        # Query database for interface statuses
-                        mysql -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${DB_PASS}" ${MYSQL_DB} -e "SELECT p.port_id, d.hostname, p.ifName, p.ifDescr, p.ifAdminStatus, p.ifOperStatus FROM ports AS p JOIN devices AS d ON p.device_id = d.device_id WHERE d.hostname = '${FORTIGATE_DEVICE_IP}';" > observium_discovery.log
+                        # Query database for interface statuses with proper escaping
+                        mysql -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${DB_PASS}" ${MYSQL_DB} -e "SELECT p.port_id, d.hostname, p.ifName, p.ifDescr, p.ifAdminStatus, p.ifOperStatus FROM ports AS p JOIN devices AS d ON p.device_id = d.device_id WHERE d.hostname = \\"${FORTIGATE_DEVICE_IP}\\";" > observium_discovery.log
                         # Extract down interfaces
                         DOWN_FROM_OBSERVIUM=$(grep -i "down" observium_discovery.log | grep -o "ifName.*" | cut -d'|' -f3 | tr -d ' ' || true)
                         echo "Down interfaces from Observium: $DOWN_FROM_OBSERVIUM"
