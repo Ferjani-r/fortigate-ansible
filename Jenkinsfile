@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        cron('H/10 * * * *') // Runs every 10 minutes
+        cron('H/30 * * * *') // Runs every 10 minutes
     }
 
     environment {
@@ -11,7 +11,7 @@ pipeline {
         MYSQL_HOST = 'localhost' // From config.php
         MYSQL_DB   = 'observium' // From config.php
         FORTIGATE_DEVICE_IP = '172.17.120.21'
-        FORTIGATE_CREDENTIALS = credentials('FORTIGATE_CREDENTIALS') // Username:password for FortiGate
+        FG_API_TOKEN = credentials('FG_API_TOKEN') // Use existing FortiGate API token
     }
 
     stages {
@@ -32,11 +32,11 @@ pipeline {
                         # Extract down interfaces using tab as delimiter
                         DOWN_INTERFACES=$(grep -i "down" observium_discovery.log | tail -n +2 | awk '{print $3}' || true)
                         echo "Down interfaces from Observium: $DOWN_INTERFACES"
-                        # Backup down interfaces
+                        # Backup down interfaces using API token
                         if [ -n "$DOWN_INTERFACES" ]; then
                             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
                             for INTERFACE in $DOWN_INTERFACES; do
-                                ./backup_interface.sh "${FORTIGATE_DEVICE_IP}" "${INTERFACE}" "${FORTIGATE_CREDENTIALS}" "observium_data/backup_${TIMESTAMP}_${INTERFACE}.conf"
+                                ./backup_interface.sh "${FORTIGATE_DEVICE_IP}" "${INTERFACE}" "${FG_API_TOKEN}" "observium_data/backup_${TIMESTAMP}_${INTERFACE}.conf"
                             done
                         fi
                     '''
